@@ -1,0 +1,55 @@
+{
+  "name": "dsh-codex-atlas",
+  "description": "Spec-Driven Development for DSH: Unifies project architecture into MEMORY.md, strict SPEC.md files, and a centralized JOURNAL.md.",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts",
+    "cordis.patch.yml"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsdown",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/atlas.test.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "spec-driven-development",
+    "atlas",
+    "memory",
+    "journal"
+  ],
+  "engines": {
+    "node": ">=24.9.0"
+  },
+  "packageManager": "pnpm@11.28.5",
+  "license": "MIT",
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.5",
+    "@deepseek-ai/dsh-agent": "^0.2.1-rc.4",
+    "@deepseek-ai/dsh-system-prompt": "^0.2.1-rc.4",
+    "@deepseek-ai/dsh-tools": "^0.2.1-rc.4",
+    "@types/node": "^24.0.0",
+    "tsdown": "^0.22.2",
+    "typescript": "^6.0.3"
+  }
+}

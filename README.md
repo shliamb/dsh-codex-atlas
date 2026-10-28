@@ -1,75 +1,77 @@
-# dsh-codex-atlas — Atlas для DSH
+# dsh-codex-atlas — Atlas for DSH
 
-**Spec-Driven Development для [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): одна карта проекта, строгие локальные спецификации и общий журнал.**
+**English** | [Русский](README.ru.md)
 
-Плагин даёт агенту и человеку единую точку правды об архитектуре проекта, не заставляя читать весь код. В System Prompt попадает только `MEMORY.md`; `JOURNAL.md` не попадает туда никогда. Всё, что относится к конкретному модулю, лежит рядом с модулем в `SPEC.md`.
+**Spec-Driven Development for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): a single project map, strict local specifications, and a unified journal.**
 
-## Что это даёт
+The plugin gives both the agent and the human a single source of truth about the project architecture without forcing them to read the entire codebase. Only `MEMORY.md` is injected into the System Prompt; `JOURNAL.md` is never injected. Everything related to a specific module lives right next to the module in `SPEC.md`.
 
-- **Меньше контекста.** Агент видит короткую карту проекта, а не весь код.
-- **Предсказуемые изменения.** Перед правкой кода агент обязан прочитать `SPEC.md` модуля.
-- **Актуальные контракты.** Изменение логики или формата данных фиксируется в `SPEC.md` в той же сессии.
-- **История без шума.** `JOURNAL.md` растёт append-only и не тратит токены System Prompt.
-- **Безопасная миграция.** Старый `MEMORY.md` от другого плагина не перезаписывается молча.
+## Features
 
-## Файлы проекта
+- **Less context.** The agent sees a short project map, not the whole codebase.
+- **Predictable changes.** Before editing code, the agent must read the module's `SPEC.md`.
+- **Up-to-date contracts.** Changes in logic or data formats are recorded in `SPEC.md` during the same session.
+- **Noise-free history.** `JOURNAL.md` grows append-only and doesn't consume System Prompt tokens.
+- **Safe migration.** An old `MEMORY.md` from another plugin is not overwritten silently.
 
-| Файл | Где лежит | Роль | В System Prompt |
+## Project Files
+
+| File | Location | Role | In System Prompt |
 |---|---|---|---|
-| `MEMORY.md` | корень проекта | Карта: обзор, модули, сценарии, Roadmap, правила, стиль | Да, до 6000 символов |
-| `SPEC.md` | папка каждого модуля | Статическая спецификация модуля | Нет; читается по необходимости |
-| `JOURNAL.md` | корень проекта | Append-only журнал сессий | Нет, никогда |
+| `MEMORY.md` | project root | Map: overview, modules, scenarios, roadmap, rules, style | Yes, up to 6000 chars |
+| `SPEC.md` | each module's folder | Static module specification | No; read on demand |
+| `JOURNAL.md` | project root | Append-only session journal | No, never |
 
-Структура `MEMORY.md` строго фиксирована:
+The `MEMORY.md` structure is strictly fixed:
 
 ```md
 # MEMORY.md — Atlas
 
-## Обзор
-## Модули
-## Логические цепочки (Scenarios)
+## Overview
+## Modules
+## Scenarios
 ## Roadmap
-## Ограничения (Rules)
-## Стиль пользователя (User Style)
+## Rules
+## User Style
 ```
 
-`SPEC.md` тоже имеет фиксированные разделы:
+`SPEC.md` also has fixed sections:
 
 ```md
-## Суть работы
-## Входные данные
-## Выходные данные
-## Логика (Вариации)
-## Обработка ошибок
+## Purpose
+## Input Data
+## Output Data
+## Logic (Variations)
+## Error Handling
 ```
 
-`JOURNAL.md` — только записи такого вида:
+`JOURNAL.md` contains only entries in this format:
 
 ```md
-[2026-10-28 16:10] [auth] Добавлена проверка JWT
+[2026-10-28 16:10] [auth] Added JWT validation
 ```
 
-## Инструменты
+## Tools
 
-| Инструмент | Аргументы | Что делает |
+| Tool | Arguments | Description |
 |---|---|---|
-| `update_memory` | без аргументов | Читает `MEMORY.md` |
-| | `section`, `content`, `mode` | Заменяет секцию (`replace`) или дописывает в неё (`append`) |
-| | `module`, `spec`, `summary` | Добавляет модуль в `## Модули`; `spec` должен существовать |
-| `update_spec` | `module` | Читает `SPEC.md` модуля |
-| | `module`, `section`, `content`, `mode` | Меняет одну секцию; создаёт `SPEC.md` из шаблона, если файла нет |
-| `log_session` | `module`, `summary` | Дописывает одну строку в `JOURNAL.md`; вызывается в конце сессии |
-| `sync_atlas` | `action: "check"` | Только отчёт: состояние файлов, число `SPEC.md`, невалидные спеки |
-| | `action: "init"` | Создаёт отсутствующие `MEMORY.md` и `JOURNAL.md` |
-| | `action: "migrate"`, `confirm: true` | После разрешения пользователя сохраняет старый `MEMORY.md` в `.atlas/backup/`, добавляет недостающие заголовки, сохраняя текст |
+| `update_memory` | no args | Reads `MEMORY.md` |
+| | `section`, `content`, `mode` | Replaces a section (`replace`) or appends to it (`append`) |
+| | `module`, `spec`, `summary` | Adds a module to `## Modules`; `spec` must exist |
+| `update_spec` | `module` | Reads the module's `SPEC.md` |
+| | `module`, `section`, `content`, `mode` | Modifies a section; creates `SPEC.md` from a template if the file doesn't exist |
+| `log_session` | `module`, `summary` | Appends a single line to `JOURNAL.md`; called at the end of the session |
+| `sync_atlas` | `action: "check"` | Report only: file status, number of `SPEC.md` files, invalid specs |
+| | `action: "init"` | Creates missing `MEMORY.md` and `JOURNAL.md` |
+| | `action: "migrate"`, `confirm: true` | After user approval, backs up the old `MEMORY.md` to `.atlas/backup/`, adds missing headers while preserving the text |
 
-`section` для `update_memory`: `overview`, `modules`, `scenarios`, `roadmap`, `rules`, `style`.
-`section` для `update_spec`: `purpose`, `input`, `output`, `logic`, `errors`.
+`section` for `update_memory`: `overview`, `modules`, `scenarios`, `roadmap`, `rules`, `style`.
+`section` for `update_spec`: `purpose`, `input`, `output`, `logic`, `errors`.
 
-Примеры вызовов:
+Usage examples:
 
 ```json
-{ "section": "roadmap", "content": "- [x] Авторизация готова", "mode": "append" }
+{ "section": "roadmap", "content": "- [x] Auth is complete", "mode": "append" }
 ```
 
 ```json
@@ -77,119 +79,112 @@
 ```
 
 ```json
-{ "module": "auth", "summary": "Добавлена проверка JWT" }
+{ "module": "auth", "summary": "Added JWT validation" }
 ```
 
 ```json
 { "action": "migrate", "confirm": true }
 ```
 
-## Что видит агент
+## What the Agent Sees
 
-Плагин добавляет секцию System Prompt `dsh-codex-atlas:atlas` с правилами:
+The plugin injects a System Prompt section `dsh-codex-atlas:atlas` with the following rules:
 
-> Изучи `MEMORY.md`. Следуй сценариям и правилам. Перед изменением кода найди модуль, прочитай его `SPEC.md`. Любое изменение логики или форматов данных ОБЯЗАТЕЛЬНО фиксируй в `SPEC.md`. В конце сессии вызови `log_session`. Файл `JOURNAL.md` существует, но читать его без явной необходимости запрещено.
+> Study `MEMORY.md`. Follow the scenarios and rules. Before changing code, find the module and read its `SPEC.md`. Any change in logic or data formats MUST be recorded in `SPEC.md`. At the end of the session, call `log_session`. The file `JOURNAL.md` exists, but reading it without explicit necessity is forbidden.
 
-Если `MEMORY.md` отсутствует, агент получает инструкцию вызвать `sync_atlas` с `action="init"`. Если структура файла чужая, агент обязан остановиться и спросить пользователя:
+If `MEMORY.md` is missing, the agent receives instructions to call `sync_atlas` with `action="init"`. If the file structure is foreign, the agent must stop and ask the user:
 
-> Я вижу старый файл памяти. Могу ли я просканировать проект, изучить старые файлы и переписать их под новую структуру Atlas?
+> I see an old memory file. May I scan the project, study the old files, and rewrite them according to the new Atlas structure?
 
-Только после разрешения вызывается `sync_atlas` с `action="migrate"` и `confirm=true`: старый файл копируется в `.atlas/backup/`, а в новый добавляются недостающие канонические заголовки без потери старого текста.
+Only after permission is granted, `sync_atlas` is called with `action="migrate"` and `confirm=true`: the old file is copied to `.atlas/backup/`, and missing canonical headers are added to the new one without losing the original text.
 
-## Установка
+## Installation
 
-### Вариант 1. Из локальной папки (рекомендуется для разработки)
+### Option 1. From npm (Recommended)
 
 ```sh
-cd /путь/к/dsh-codex-atlas
-corepack enable
-pnpm install
-pnpm build
+dsh plugin --profile web add dsh-codex-atlas
+```
+
+### Option 2. From a Local Folder
+
+```sh
+cd /path/to/dsh-codex-atlas
 dsh plugin --profile web add "$PWD"
 ```
+*(Note: `lib/` is already committed to the repository, so `pnpm install` and `pnpm build` are not required just to use the plugin.)*
 
-`lib/` уже лежит в репозитории, поэтому для установки готового плагина шаги `pnpm install` и `pnpm build` не обязательны — достаточно `dsh plugin --profile web add /абсолютный/путь/к/dsh-codex-atlas`.
-
-После установки **перезапустите `dsh web`**. Плагин добавляется в профиль `web` как отдельный bundle-layer.
-
-### Вариант 2. Из Git-репозитория
-
-Если репозиторий опубликован:
+### Option 3. From Git Repository
 
 ```sh
-dsh plugin --profile web add https://github.com/<owner>/dsh-codex-atlas.git
+dsh plugin --profile web add https://github.com/shliamb/dsh-codex-atlas.git
 ```
 
-Затем перезапустите `dsh web`.
+After installation, **restart `dsh web`**. The plugin is added to the `web` profile as a separate bundle-layer.
 
-### Проверка
+### Verification
 
-1. Убедитесь, что пакет попал в профиль:
-
+1. Make sure the package is in your profile:
    ```sh
    grep -n "dsh-codex-atlas" ~/.dsh/profiles/web/package.json
    ```
+2. Open a new session and ask the agent:
+   > Check Atlas: call `sync_atlas` with `action="check"`.
+3. In a newly created project, the agent will suggest `action="init"`. In a project with an old `MEMORY.md`, it will first ask for migration permission.
 
-2. Откройте новую сессию и попросите агента:
-
-   > Проверь Atlas: вызови `sync_atlas` с `action="check"`.
-
-3. В только что созданном проекте агент предложит `action="init"`; в проекте со старым `MEMORY.md` — сначала спросит разрешение на миграцию.
-
-### Удаление
+### Removal
 
 ```sh
 dsh plugin --profile web remove dsh-codex-atlas
 ```
+Restart `dsh web` after removal.
 
-Перезапустите `dsh web` после удаления.
-
-## Разработка
+## Development
 
 ```sh
 pnpm install
 pnpm check        # tsc --noEmit
 pnpm build        # tsc (d.ts) + tsdown (lib/index.js)
-pnpm test         # собирает lib/ и запускает smoke-тесты node:test
+pnpm test         # builds lib/ and runs node:test smoke tests
 ```
 
-`lib/` коммитится в репозиторий: пользователю не нужен локальный build, а `dsh plugin add` читает готовый `lib/index.js`.
+`lib/` is committed to the repository: users don't need a local build, and `dsh plugin add` reads the ready-made `lib/index.js`.
 
-Структура репозитория:
+Repository structure:
 
 ```text
 dsh-codex-atlas/
 ├── src/
-│   ├── index.ts        # весь плагин
-│   └── SPEC.md         # спецификация этого модуля
+│   ├── index.ts        # the entire plugin
+│   └── SPEC.md         # specification of this module
 ├── lib/
-│   ├── index.js        # собранный runtime (коммитится)
+│   ├── index.js        # compiled runtime (committed)
 │   └── types/index.d.ts
 ├── tests/
-│   └── atlas.test.mjs  # smoke-тесты node:test
-├── MEMORY.md           # карта самого плагина
-├── JOURNAL.md          # журнал разработки плагина
-├── cordis.patch.yml    # bundle-патч для dsh plugin add
+│   └── atlas.test.mjs  # node:test smoke tests
+├── MEMORY.md           # map of the plugin itself
+├── JOURNAL.md          # development journal of the plugin
+├── cordis.patch.yml    # bundle patch for dsh plugin add
 ├── package.json
 ├── tsconfig.json
 ├── tsdown.config.ts
 └── README.md
 ```
 
-## Имя пакета
+## Package Name
 
-Пакет называется `dsh-codex-atlas`. Короткое имя `dsh-codex` уже занято в npm другим DSH-плагином (ChatGPT OAuth / Codex models), поэтому проект использует суффикс `-atlas`. Локальная установка и `dsh plugin add` работают с текущим именем без дополнительных настроек.
+The package is named `dsh-codex-atlas`. The short name `dsh-codex` is already taken on npm by another DSH plugin (ChatGPT OAuth / Codex models), so this project uses the `-atlas` suffix. Local installation and `dsh plugin add` work with the current name without additional configuration.
 
-## Приватность и ограничения
+## Privacy and Limitations
 
-- **Никаких сетевых запросов.** Плагин работает только с локальными файлами через `node:fs`; дочерние процессы (включая `git`) не запускаются.
-- **Одна рабочая директория.** Файлы живут в корне workspace сессии и не агрегируются между проектами.
-- **System Prompt усекается.** В контекст попадает не более 6000 символов `MEMORY.md`; если карта длиннее, агент читает файл целиком стандартным инструментом.
-- **Конкурентные сессии.** Две сессии в одном workspace могут перезаписать изменения друг друга: запись идёт по принципу last-write-wins.
-- **Скан `sync_atlas` ограничен.** Просматривается до 20 000 записей; `node_modules`, `.git`, `dist`, `lib`, `build` и похожие каталоги пропускаются.
-- **Автозапись журнала.** Если агент забыл вызвать `log_session`, при завершении top-level сессии плагин допишет одну строку с модулем `atlas`. Для subagent-сессий автозаписи нет.
-- **`MEMORY.md` не создаётся «на чтении».** Для первого создания используйте `sync_atlas` с `action="init"`.
+- **No network requests.** The plugin works only with local files via `node:fs`; child processes (including `git`) are not spawned.
+- **Single working directory.** Files live in the root of the session's workspace and are not aggregated across projects.
+- **System Prompt truncation.** No more than 6000 characters of `MEMORY.md` are injected into the context; if the map is longer, the agent reads the file in full using standard tools.
+- **Concurrent sessions.** Two sessions in the same workspace may overwrite each other's changes: writing follows a last-write-wins principle.
+- **Limited `sync_atlas` scan.** Up to 20,000 entries are scanned; `node_modules`, `.git`, `dist`, `lib`, `build`, and similar directories are skipped.
+- **Journal auto-entry.** If the agent forgets to call `log_session`, the plugin will append one line with the `atlas` module when the top-level session ends. There is no auto-entry for subagent sessions.
+- **`MEMORY.md` is not created "on read".** Use `sync_atlas` with `action="init"` for initial creation.
 
-## Лицензия
+## License
 
 [MIT](LICENSE)
